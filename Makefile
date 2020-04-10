@@ -1,9 +1,9 @@
 all:
-	g++ test.cpp -o test.out -std=c++17 -lsfml-graphics -lsfml-window -lsfml-system
+	g++ maze.cpp -o maze.out -std=c++17 -lsfml-graphics -lsfml-window -lsfml-system
 
 run:
-	./test.out
+	./maze.out
 
 clean:
-	rm test.out
+	rm *.out
 	rm *.o
