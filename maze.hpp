@@ -43,4 +43,6 @@ public:
 } // namespace maze
 #pragma endregion
 
+void replace_wordargs(int argc, char **argv);
+
 void print_help(uint8_t exit_code);

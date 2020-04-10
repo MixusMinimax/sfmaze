@@ -1,7 +1,9 @@
+#include <stdio.h>
 #include <iostream>
 #include <unistd.h>
 #include <algorithm>
 #include <string>
+#include <string.h>
 #include <SFML/Graphics.hpp>
 
 #include "maze.hpp"
@@ -124,6 +126,18 @@ uint8_t *Maze::unload()
 #pragma endregion // Maze end
 } // namespace maze
 
+void replace_wordargs(int argc, char **argv)
+{
+    for (uint i = 1; i < argc; ++i)
+    {
+        if (!strncmp(argv[i], "--", 2))
+        {
+            argv[i][1] = argv[i][2];
+            argv[i][2] = '\0';
+        }
+    }
+}
+
 void print_help(uint8_t exit_code = 0)
 {
     std::ostream *stream = exit_code ? &(std::cerr) : &(std::cout);
@@ -141,6 +155,9 @@ int main(int argc, char **argv)
     bool bGenerate = false;
 
 #pragma region Parse command line arguments
+    // replace wordargs with their starting letters, i.e. "--help" will become "-h"
+    replace_wordargs(argc, argv);
+
     int c;
     int parsed;
     uint8_t error = false;
