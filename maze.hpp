@@ -43,4 +43,4 @@ public:
 } // namespace maze
 #pragma endregion
 
-void print_help(int exit_code);
+void print_help(uint8_t exit_code);

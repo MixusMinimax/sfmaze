@@ -124,6 +124,13 @@ uint8_t *Maze::unload()
 #pragma endregion // Maze end
 } // namespace maze
 
+void print_help(uint8_t exit_code = 0)
+{
+    std::ostream *stream = exit_code ? &(std::cerr) : &(std::cout);
+    *stream << "help";
+    exit(exit_code);
+}
+
 int main(int argc, char **argv)
 {
     std::string input_path = "";
@@ -136,7 +143,7 @@ int main(int argc, char **argv)
 #pragma region Parse command line arguments
     int c;
     int parsed;
-    bool error = false;
+    uint8_t error = false;
     while ((c = getopt(argc, argv, "i:o:x:y:dgh")) != -1)
     {
         switch (c)
@@ -170,9 +177,7 @@ int main(int argc, char **argv)
         default:
             error = true;
         case 'h':
-            std::ostream *stream = error ? &(std::cerr) : &(std::cout);
-            *stream << "help";
-            return error;
+            print_help(error);
         }
     }
 
