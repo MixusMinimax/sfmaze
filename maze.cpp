@@ -127,25 +127,6 @@ uint8_t *Maze::unload()
 #pragma endregion // Maze end
 } // namespace maze
 
-void replace_wordargs(int argc, char **argv)
-{
-    /*
-    for (uint i = 1; i < argc; ++i)
-    {
-        for (uint j = 0; j < wordargs.amount; ++j)
-        {
-            auto arg = wordargs.args[j];
-            if (!strcmp(argv[i], arg.name))
-            {
-                argv[i][1] = arg.label;
-                argv[i][2] = '\0';
-                break;
-            }
-        }
-    }
-    */
-}
-
 void print_help(char *progname, uint8_t exit_code = 0)
 {
     std::ostream *stream = exit_code ? &(std::cerr) : &(std::cout);
