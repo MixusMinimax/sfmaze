@@ -152,12 +152,12 @@ void print_help(char *progname, uint8_t exit_code = 0)
     *stream
         << "Usage: " << progname << " [options]" << std::endl
         << "Options:" << std::endl
-        << "  -i PATH, --input=PATH      Read maze from PATH" << std::endl
-        << "  -o PATH, --output=PATH     Write maze to PATH" << std::endl
-        << "  -x N, --width=N            Set maze width. Get's overriden if maze is generated from file" << std::endl
-        << "  -y N, --height=N           Set maze height. Get's overriden if maze is generated from file" << std::endl
-        << "  -d, --display              Render maze to an SFML window" << std::endl
-        << "  -g, --generate             Generate a random maze using depth first search" << std::endl
+        << "  -i PATH, --input=PATH      Read maze from PATH." << std::endl
+        << "  -o PATH, --output=PATH     Write maze to PATH." << std::endl
+        << "  -x N, --width=N            Set maze width. Get's overriden if maze is generated from file." << std::endl
+        << "  -y N, --height=N           Set maze height. Get's overriden if maze is generated from file." << std::endl
+        << "  -d, --display              Render maze to an SFML window." << std::endl
+        << "  -g, --generate             Generate a random maze using depth first search." << std::endl
         << "  -h, --help                 Print this message and exit." << std::endl;
 
     exit(exit_code);
