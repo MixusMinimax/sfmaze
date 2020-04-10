@@ -155,9 +155,6 @@ int main(int argc, char **argv)
 
 #pragma region Parse command line arguments
 
-    // replace wordargs with their starting letters, i.e. "--help" will become "-h"
-    replace_wordargs(argc, argv);
-
     int c;
     int parsed;
     uint8_t error = false;
