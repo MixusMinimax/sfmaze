@@ -10,6 +10,12 @@
 #include "maze.hpp"
 
 static int verbose_flag;
+static std::string input_path = "";
+static std::string output_path = "";
+static uint width = 1;
+static uint height = 1;
+static bool bDisplay = false;
+static bool bGenerate = false;
 
 namespace maze
 {
@@ -146,13 +152,6 @@ void print_help(char *progname, uint8_t exit_code = 0)
 
 int main(int argc, char **argv)
 {
-    std::string input_path = "";
-    std::string output_path = "";
-    uint width = 1;
-    uint height = 1;
-    bool bDisplay = false;
-    bool bGenerate = false;
-
 #pragma region Parse command line arguments
 
     int c;
