@@ -120,7 +120,7 @@ public:
 
 int main(int argc, char **argv)
 {
-    std::string input_path = NULL;
+    std::string input_path = "";
 
     // Parse command line arguments
     int c;
