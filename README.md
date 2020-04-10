@@ -8,3 +8,6 @@ Generates random mazes using depth first search.
 - Write maze to binary file
 - Generate random maze
 - Display the maze as it's being generated in an SFML window
+
+
+Basically the same as my python version: [pymaze](pymaze)
