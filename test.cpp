@@ -2,6 +2,9 @@
 #include <string>
 #include <iostream>
 #include <unistd.h>
+#include <algorithm>
+
+#define VERBOSE
 
 namespace maze
 {
@@ -124,13 +127,13 @@ int main(int argc, char **argv)
     std::string output_path = "";
     uint width = 1;
     uint height = 1;
-    bool bVisual = false;
+    bool bDisplay = false;
     bool bGenerate = false;
 
-    int parsed;
     // Parse command line arguments
     int c;
-    while ((c = getopt(argc, argv, "i:o:w:h:vg")) != -1)
+    int parsed;
+    while ((c = getopt(argc, argv, "i:o:x:y:dg")) != -1)
     {
         switch (c)
         {
@@ -142,18 +145,18 @@ int main(int argc, char **argv)
             output_path = optarg;
             break;
 
-        case 'w':
+        case 'x':
             parsed = atoi(optarg);
             width = std::clamp(parsed, 1, 1024);
             break;
 
-        case 'h':
+        case 'y':
             parsed = atoi(optarg);
             height = std::clamp(parsed, 1, 1024);
             break;
 
-        case 'v':
-            bVisual = true;
+        case 'd':
+            bDisplay = true;
             break;
 
         case 'g':
@@ -165,14 +168,22 @@ int main(int argc, char **argv)
         }
     }
 
+#ifdef VERBOSE
+
+    std::cout
+        << "input path: \"" << input_path << '"' << std::endl
+        << "output path: \"" << output_path << '"' << std::endl
+        << "size: " << width << 'x' << height << std::endl
+        << "display: " << (bDisplay ? "true" : "false") << std::endl
+        << "generate: " << (bGenerate ? "true" : "false") << std::endl;
+
+#endif
+
     sf::RenderWindow window(sf::VideoMode(200, 200), "Floating");
     window.setTitle("Yay");
 
     sf::CircleShape shape(100.f);
     shape.setFillColor(sf::Color::Green);
-
-    maze::Node node(0b0101);
-    std::cout << std::string(node) << std::endl;
 
     while (window.isOpen())
     {
