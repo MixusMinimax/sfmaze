@@ -1,11 +1,11 @@
 all:
 	g++ -c test.cpp
-	g++ test.o -o test -lsfml-graphics -lsfml-window -lsfml-system
+	g++ test.o -o test.out -lsfml-graphics -lsfml-window -lsfml-system
 	rm test.o
 
 run:
-	./test
+	./test.out
 
 clean:
-	rm test
+	rm test.out
 	rm *.o
