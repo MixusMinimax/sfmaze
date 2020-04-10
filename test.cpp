@@ -121,7 +121,13 @@ public:
 int main(int argc, char **argv)
 {
     std::string input_path = "";
+    std::string output_path = "";
+    uint width = 1;
+    uint height = 1;
+    bool bVisual = false;
+    bool bGenerate = false;
 
+    int parsed;
     // Parse command line arguments
     int c;
     while ((c = getopt(argc, argv, "i:o:w:h:vg")) != -1)
@@ -131,12 +137,33 @@ int main(int argc, char **argv)
         case 'i':
             input_path = optarg;
             break;
-        
+
+        case 'o':
+            output_path = optarg;
+            break;
+
+        case 'w':
+            parsed = atoi(optarg);
+            width = std::clamp(parsed, 1, 1024);
+            break;
+
+        case 'h':
+            parsed = atoi(optarg);
+            height = std::clamp(parsed, 1, 1024);
+            break;
+
+        case 'v':
+            bVisual = true;
+            break;
+
+        case 'g':
+            bGenerate = true;
+            break;
+
         default:
             break;
         }
     }
-
 
     sf::RenderWindow window(sf::VideoMode(200, 200), "Floating");
     window.setTitle("Yay");
