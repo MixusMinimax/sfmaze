@@ -10,4 +10,4 @@ Generates random mazes using depth first search.
 - Display the maze as it's being generated in an SFML window
 
 
-Basically the same as my python version: [pymaze](github.com/MixusMinimax/pymaze)
+Basically the same as my python version: [pymaze](https://github.com/MixusMinimax/pymaze)
