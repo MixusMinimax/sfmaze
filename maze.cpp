@@ -4,11 +4,12 @@
 #include <algorithm>
 #include <string>
 #include <string.h>
+#include <getopt.h>
 #include <SFML/Graphics.hpp>
 
 #include "maze.hpp"
 
-#define VERBOSE
+static int verbose_flag;
 
 namespace maze
 {
@@ -128,20 +129,37 @@ uint8_t *Maze::unload()
 
 void replace_wordargs(int argc, char **argv)
 {
+    /*
     for (uint i = 1; i < argc; ++i)
     {
-        if (!strncmp(argv[i], "--", 2))
+        for (uint j = 0; j < wordargs.amount; ++j)
         {
-            argv[i][1] = argv[i][2];
-            argv[i][2] = '\0';
+            auto arg = wordargs.args[j];
+            if (!strcmp(argv[i], arg.name))
+            {
+                argv[i][1] = arg.label;
+                argv[i][2] = '\0';
+                break;
+            }
         }
     }
+    */
 }
 
-void print_help(uint8_t exit_code = 0)
+void print_help(char *progname, uint8_t exit_code = 0)
 {
     std::ostream *stream = exit_code ? &(std::cerr) : &(std::cout);
-    *stream << "help";
+    *stream
+        << "Usage: " << progname << " [options]" << std::endl
+        << "Options:" << std::endl
+        << "  -i PATH, --input=PATH      Read maze from PATH" << std::endl
+        << "  -o PATH, --output=PATH     Write maze to PATH" << std::endl
+        << "  -x N, --width=N            Set maze width. Get's overriden if maze is generated from file" << std::endl
+        << "  -y N, --height=N           Set maze height. Get's overriden if maze is generated from file" << std::endl
+        << "  -d, --display              Render maze to an SFML window" << std::endl
+        << "  -g, --generate             Generate a random maze using depth first search" << std::endl
+        << "  -h, --help                 Print this message and exit." << std::endl;
+
     exit(exit_code);
 }
 
@@ -155,16 +173,47 @@ int main(int argc, char **argv)
     bool bGenerate = false;
 
 #pragma region Parse command line arguments
+
     // replace wordargs with their starting letters, i.e. "--help" will become "-h"
     replace_wordargs(argc, argv);
 
     int c;
     int parsed;
     uint8_t error = false;
-    while ((c = getopt(argc, argv, "i:o:x:y:dgh")) != -1)
+
+    while (1)
     {
+        static struct option long_options[] =
+            {
+                /* These options set a flag. */
+                {"verbose", no_argument, &verbose_flag, 1},
+                {"brief", no_argument, &verbose_flag, 0},
+                {"input", required_argument, 0, 'i'},
+                {"output", required_argument, 0, 'o'},
+                {"width", required_argument, 0, 'x'},
+                {"height", required_argument, 0, 'y'},
+                {"display", no_argument, 0, 'd'},
+                {"generate", no_argument, 0, 'g'},
+                {"help", no_argument, 0, 'h'},
+                {0, 0, 0, 0}};
+        /* getopt_long stores the option index here. */
+        int option_index = 0;
+        c = getopt_long(argc, argv, "i:o:x:y:dgh", long_options, &option_index);
+        if (c == -1)
+            break;
+
         switch (c)
         {
+        case 0:
+            /* If this option set a flag, do nothing else now. */
+            if (long_options[option_index].flag != 0)
+                break;
+            std::cout << "option " << long_options[option_index].name;
+            if (optarg)
+                std::cout << " with arg " << optarg;
+            std::cout << std::endl;
+            break;
+
         case 'i':
             input_path = optarg;
             break;
@@ -194,20 +243,18 @@ int main(int argc, char **argv)
         default:
             error = true;
         case 'h':
-            print_help(error);
+            print_help(argv[0], error);
         }
     }
 
-#ifdef VERBOSE
+    if (verbose_flag)
+        std::cout
+            << "input path: \"" << input_path << '"' << std::endl
+            << "output path: \"" << output_path << '"' << std::endl
+            << "size: " << width << 'x' << height << std::endl
+            << "display: " << (bDisplay ? "true" : "false") << std::endl
+            << "generate: " << (bGenerate ? "true" : "false") << std::endl;
 
-    std::cout
-        << "input path: \"" << input_path << '"' << std::endl
-        << "output path: \"" << output_path << '"' << std::endl
-        << "size: " << width << 'x' << height << std::endl
-        << "display: " << (bDisplay ? "true" : "false") << std::endl
-        << "generate: " << (bGenerate ? "true" : "false") << std::endl;
-
-#endif
 #pragma endregion
 
     sf::RenderWindow window(sf::VideoMode(200, 200), "Floating");
