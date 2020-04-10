@@ -5,6 +5,7 @@
 #include <string>
 #include <string.h>
 #include <getopt.h>
+#include <filesystem>
 #include <SFML/Graphics.hpp>
 
 #include "maze.hpp"
@@ -192,11 +193,17 @@ int main(int argc, char **argv)
             break;
 
         case 'i':
-            input_path = optarg;
+            if (std::filesystem::is_regular_file(optarg))
+                input_path = optarg;
+            else
+                std::cerr << "Invalid path: " << '"' << optarg << '"' << std::endl;
             break;
 
         case 'o':
-            output_path = optarg;
+            if (!std::filesystem::exists(optarg) || std::filesystem::is_regular_file(optarg))
+                output_path = optarg;
+            else
+                std::cerr << "Invalid path: " << '"' << optarg << '"' << std::endl;
             break;
 
         case 'x':
