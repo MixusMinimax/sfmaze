@@ -1,3 +1,11 @@
+/**
+ * @file maze.cpp
+ * @author Maxi Barmetler (https://github.com/MixusMinimax)
+ * @brief Generates and Displays Mazes.
+ * @version 0.1
+ * @date 2020-04-11
+ */
+
 #include <stdio.h>
 #include <iostream>
 #include <fstream>
@@ -225,6 +233,9 @@ void print_help(char *progname, uint8_t exit_code = 0)
     exit(exit_code);
 }
 
+/***************************************
+// Main                               //
+***************************************/
 int main(int argc, char **argv)
 {
     static uint width = 1;
