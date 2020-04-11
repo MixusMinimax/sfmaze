@@ -98,6 +98,32 @@ Maze::Maze(uint8_t _w, uint8_t _h)
 
 void Maze::load(uint8_t *bin)
 {
+    // Make sure that field isn't already pointing to some place in memory
+    if (field)
+    {
+        free(field);
+        field = NULL;
+    }
+
+    // Make sure that changed isn't already pointing to some place in memory
+    if (changed)
+    {
+        free(changed);
+        changed = NULL;
+    }
+
+    if (!bin)
+    {
+        field = (Node *)malloc(w * h * sizeof(Node));
+        changed = (bool *)malloc(w * h * sizeof(bool));
+        for (uint i = 0; i < w * h; ++i)
+        {
+            field[i] = Node(0);
+            changed[i] = true;
+        }
+        return;
+    }
+
     w = bin[0];
     h = bin[1];
     bin += 2;
@@ -111,7 +137,8 @@ void Maze::load(uint8_t *bin)
     }
     if (l % 2 == 1)
         field[l - 1] = Node(bin[l / 2] >> 4);
-}
+    memset(changed, true, w * h);
+} // namespace maze
 
 uint8_t *Maze::unload()
 {
@@ -144,7 +171,9 @@ uint8_t *Maze::unload()
         bin[index] = byte;
     }
     free(field);
+    free(changed);
     field = NULL;
+    changed = NULL;
     return bin - 2;
 }
 
@@ -312,6 +341,11 @@ int main(int argc, char **argv)
                 m.print();
         }
     }
+    else
+    {
+        // Initialize empty field
+        m.load(NULL);
+    }
 
     uint cellSize = 1;
     {
@@ -338,10 +372,12 @@ int main(int argc, char **argv)
                 window.close();
         }
 
-        window.clear();
-        window.draw(shape);
+        
         window.display();
     }
+
+    //TODO: save maze to file if path is specified
+    m.unload();
 
     return EXIT_SUCCESS;
 }

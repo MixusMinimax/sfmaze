@@ -40,9 +40,10 @@ public:
 class Maze
 {
 public:
-    uint8_t w;          /// Width
-    uint8_t h;          /// Height
-    Node *field = NULL; /// Contains all Nodes of the maze
+    uint8_t w;            /// Width
+    uint8_t h;            /// Height
+    Node *field = NULL;   /// Contains all Nodes of the maze
+    bool *changed = NULL; /// Stores for each Node, if it has changed, so that only changed Nodes are drawn to the screen
 
 public:
     /**
