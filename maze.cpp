@@ -16,6 +16,7 @@
 #define MAX_WIDTH 1000
 #define MAX_HEIGHT 700
 
+static const std::string title = "SFMaze";
 static int verbose_flag;
 static std::string input_path = "";
 static std::string output_path = "";
@@ -116,16 +117,20 @@ void Maze::load(uint8_t *bin)
     {
         field = (Node *)malloc(w * h * sizeof(Node));
         changed = (bool *)malloc(w * h * sizeof(bool));
+        memset(changed, true, w * h);
         for (uint i = 0; i < w * h; ++i)
         {
             field[i] = Node(0);
-            changed[i] = true;
         }
         return;
     }
 
     w = bin[0];
     h = bin[1];
+
+    changed = (bool *)malloc(w * h * sizeof(bool));
+    memset(changed, true, w * h);
+
     bin += 2;
     uint l = w * h;
     field = (Node *)malloc(l * sizeof(Node));
@@ -137,8 +142,7 @@ void Maze::load(uint8_t *bin)
     }
     if (l % 2 == 1)
         field[l - 1] = Node(bin[l / 2] >> 4);
-    memset(changed, true, w * h);
-} // namespace maze
+}
 
 uint8_t *Maze::unload()
 {
@@ -330,6 +334,9 @@ int main(int argc, char **argv)
         ifs.seekg(0, std::ios::beg);
         ifs.read(result.data(), pos);
 
+        if (verbose_flag)
+            std::cout << "Reading successful" << std::endl;
+
         m.load((uint8_t *)result.data());
         width = m.w;
         height = m.h;
@@ -347,6 +354,18 @@ int main(int argc, char **argv)
         m.load(NULL);
     }
 
+    // TODO: If no window, just generate the maze and exit
+    if (!bDisplay)
+    {
+        m.unload();
+        return EXIT_SUCCESS;
+    }
+
+/***************************************
+// SFML Window                        //
+***************************************/
+#pragma region SFML Window
+
     uint cellSize = 1;
     {
         int csx = MAX_WIDTH / width;
@@ -358,10 +377,19 @@ int main(int argc, char **argv)
     uint wHeight = height * cellSize;
 
     sf::RenderWindow window(sf::VideoMode(wWidth, wHeight), "Floating");
-    window.setTitle("SFMaze");
+    window.setTitle(title);
 
     sf::CircleShape shape(100.f);
     shape.setFillColor(sf::Color::Green);
+
+    uint fps_target = 60;
+    float fps = 0;
+    float fps_weight = std::min(1.f, 10.f / fps_target);
+
+    ulong last_time_ms = 0;
+    ulong frameTime = 0;
+    timespec curr_time;
+    ulong curr_time_ms;
 
     while (window.isOpen())
     {
@@ -372,12 +400,60 @@ int main(int argc, char **argv)
                 window.close();
         }
 
-        
+        // Calculate fps
+        {
+            clock_gettime(CLOCK_MONOTONIC, &curr_time);
+            curr_time_ms = curr_time.tv_sec * 1000000ul + curr_time.tv_nsec / 1000ul;
+
+            frameTime = curr_time_ms - last_time_ms;
+            float fps_new = 1e6f / frameTime;
+            fps = fps * (1 - fps_weight) + fps_new * fps_weight;
+
+            last_time_ms = curr_time_ms;
+        }
+
+        window.setTitle(title + " - " + std::to_string((int)(fps * 10) / 10) + "fps");
+
+        //window.clear();
+
+        for (uint y = 0; y < height; ++y)
+        {
+            for (uint x = 0; x < width; ++x)
+            {
+                if (m.changed[y * width + x])
+                {
+                    m.changed[y * width + x] = false;
+                    uint rx = x * cellSize;
+                    uint ry = y * cellSize;
+                    maze::Node *node = &m.field[y * width + x];
+
+                    sf::RectangleShape rect = sf::RectangleShape({(float)cellSize, (float)cellSize});
+                    rect.setFillColor((node->bin()) ? sf::Color{230, 230, 230} : sf::Color{100, 20, 100});
+                    rect.setPosition(rx, ry);
+                    window.draw(rect);
+                }
+            }
+        }
+
         window.display();
+
+        // Wait remaining time to keep fps constant
+        {
+            clock_gettime(CLOCK_MONOTONIC, &curr_time);
+            ulong calc_time_ms = curr_time.tv_sec * 1000000ul + curr_time.tv_nsec / 1000ul - curr_time_ms;
+            ulong target_time_ms = 1000000ul / fps_target;
+            ulong remaining_time_ms = 100;
+            if (calc_time_ms < target_time_ms)
+                remaining_time_ms = target_time_ms - calc_time_ms;
+            usleep(remaining_time_ms);
+        }
     }
 
     //TODO: save maze to file if path is specified
     m.unload();
+
+// SFML Window end
+#pragma endregion
 
     return EXIT_SUCCESS;
 }
