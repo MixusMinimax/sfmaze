@@ -39,7 +39,7 @@ public:
 
 class Maze
 {
-private:
+public:
     uint8_t w;          /// Width
     uint8_t h;          /// Height
     Node *field = NULL; /// Contains all Nodes of the maze
@@ -66,6 +66,11 @@ public:
      * @return  uint8_t*            Binary array containing data
      */
     uint8_t *unload();
+
+    /**
+     * @brief Prints the maze into the console
+     */
+    void print();
 };
 } // namespace maze
 #pragma endregion

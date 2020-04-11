@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <iostream>
+#include <fstream>
 #include <unistd.h>
 #include <algorithm>
 #include <string>
 #include <string.h>
 #include <getopt.h>
 #include <filesystem>
+#include <iosfwd>
 #include <SFML/Graphics.hpp>
 
 #include "maze.hpp"
@@ -13,8 +15,6 @@
 static int verbose_flag;
 static std::string input_path = "";
 static std::string output_path = "";
-static uint width = 1;
-static uint height = 1;
 static bool bDisplay = false;
 static bool bGenerate = false;
 
@@ -35,7 +35,7 @@ Node::Node(uint8_t bin)
     bool Node::name(uint8_t val = 2)             \
     {                                            \
         if (val == 2)                            \
-            return (_bin & (1 << (index))) == 1; \
+            return ((_bin >> (index)) & 1) == 1; \
         if (val == 0)                            \
         {                                        \
             _bin &= ~(1 << (index));             \
@@ -144,6 +144,28 @@ uint8_t *Maze::unload()
     return bin - 2;
 }
 
+void Maze::print()
+{
+    std::string top, middle, bottom;
+    for (uint y = 0; y < h; ++y)
+    {
+        top = "";
+        middle = "";
+        bottom = "";
+        for (uint x = 0; x < w; ++x)
+        {
+            Node *n = &field[y * w + x];
+            top += n->north() ? "+  +" : "+--+";
+            middle += n->west() ? "  " : "| ";
+            middle += n->east() ? "  " : " |";
+            bottom += n->south() ? "+  +" : "+--+";
+        }
+        std::cout << top << std::endl
+                  << middle << std::endl
+                  << bottom << std::endl;
+    }
+}
+
 #pragma endregion // Maze end
 
 } /* namespace maze */
@@ -168,6 +190,9 @@ void print_help(char *progname, uint8_t exit_code = 0)
 
 int main(int argc, char **argv)
 {
+    static uint width = 1;
+    static uint height = 1;
+
 #pragma region Parse command line arguments
 
     int c;
@@ -255,6 +280,34 @@ int main(int argc, char **argv)
             << "generate: " << (bGenerate ? "true" : "false") << std::endl;
 
 #pragma endregion
+
+    maze::Maze m(width, height);
+
+    // Load file
+    if (input_path.length())
+    {
+        if (verbose_flag)
+            std::cout << "Loading from file " << input_path << std::endl;
+
+        std::ifstream ifs(input_path, std::ios::binary | std::ios::ate);
+        std::ifstream::pos_type pos = ifs.tellg();
+
+        std::vector<char> result(pos);
+
+        ifs.seekg(0, std::ios::beg);
+        ifs.read(result.data(), pos);
+
+        m.load((uint8_t *)result.data());
+        width = m.w;
+        height = m.h;
+
+        if (verbose_flag)
+        {
+            std::cout << "size from file: " << width << 'x' << height << std::endl;
+            if (!bDisplay)
+                m.print();
+        }
+    }
 
     sf::RenderWindow window(sf::VideoMode(200, 200), "Floating");
     window.setTitle("Yay");
