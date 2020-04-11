@@ -8,9 +8,13 @@
 #include <getopt.h>
 #include <filesystem>
 #include <iosfwd>
+#include <tuple>
 #include <SFML/Graphics.hpp>
 
 #include "maze.hpp"
+
+#define MAX_WIDTH 1000
+#define MAX_HEIGHT 700
 
 static int verbose_flag;
 static std::string input_path = "";
@@ -283,7 +287,7 @@ int main(int argc, char **argv)
 
     maze::Maze m(width, height);
 
-    // Load file
+    // Read from file
     if (input_path.length())
     {
         if (verbose_flag)
@@ -309,8 +313,18 @@ int main(int argc, char **argv)
         }
     }
 
-    sf::RenderWindow window(sf::VideoMode(200, 200), "Floating");
-    window.setTitle("Yay");
+    uint cellSize = 1;
+    {
+        int csx = MAX_WIDTH / width;
+        int csy = MAX_HEIGHT / height;
+        cellSize = std::max(1, std::min(csx, csy));
+    }
+
+    uint wWidth = width * cellSize;
+    uint wHeight = height * cellSize;
+
+    sf::RenderWindow window(sf::VideoMode(wWidth, wHeight), "Floating");
+    window.setTitle("SFMaze");
 
     sf::CircleShape shape(100.f);
     shape.setFillColor(sf::Color::Green);
