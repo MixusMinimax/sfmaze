@@ -71,6 +71,12 @@ Node::operator std::string()
     return std::string(buf);
 }
 
+std::ostream &operator<<(std::ostream &os, Node &node)
+{
+    os << std::string(node);
+    return os;
+}
+
 // Node end
 #pragma endregion
 
@@ -159,6 +165,10 @@ void print_help(char *progname, uint8_t exit_code = 0)
 
 int main(int argc, char **argv)
 {
+    maze::Node node(0x02);
+    std::cout << node << std::endl;
+    return 0;
+
 #pragma region Parse command line arguments
 
     int c;

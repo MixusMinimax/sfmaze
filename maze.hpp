@@ -30,8 +30,9 @@ public:
 class Maze
 {
 private:
-    uint8_t w, h;
-    Node *field = NULL;
+    uint8_t w;          /// Width
+    uint8_t h;          /// Height
+    Node *field = NULL; /// Contains all Nodes of the maze
 
 public:
     /**
@@ -42,8 +43,18 @@ public:
      */
     Maze(uint8_t _w, uint8_t _h);
 
+    /**
+     * @brief Allocate space for field and load field from binay array: { w, h, ...}
+     * 
+     * @param    bin                 Binary array containing data
+     */
     void load(uint8_t *bin);
 
+    /**
+     * @brief store field in binary array, free field
+     * 
+     * @return  uint8_t*            Binary array containing data
+     */
     uint8_t *unload();
 };
 } // namespace maze
