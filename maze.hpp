@@ -8,9 +8,14 @@ namespace maze
 class Node
 {
 private:
-    uint8_t _bin;
+    uint8_t _bin; /// Connection bitfield (north, east, south, west)
 
 public:
+    /**
+     * @brief Construct a new Node object
+     * 
+     * @param    bin                 Connection bitfield
+     */
     Node(uint8_t bin);
 
 #define temp(name) \
@@ -22,6 +27,11 @@ public:
     temp(west);
 #undef temp
 
+    /**
+     * @brief Getter for _bin
+     * 
+     * @return uint8_t Connection bitfield
+     */
     uint8_t bin();
 
     operator std::string();

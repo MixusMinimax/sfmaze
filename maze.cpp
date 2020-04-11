@@ -18,6 +18,7 @@ static uint height = 1;
 static bool bDisplay = false;
 static bool bGenerate = false;
 
+#pragma region namespace maze
 namespace maze
 {
 /***************************************
@@ -144,7 +145,9 @@ uint8_t *Maze::unload()
 }
 
 #pragma endregion // Maze end
-} // namespace maze
+
+} /* namespace maze */
+#pragma endregion
 
 void print_help(char *progname, uint8_t exit_code = 0)
 {
@@ -165,10 +168,6 @@ void print_help(char *progname, uint8_t exit_code = 0)
 
 int main(int argc, char **argv)
 {
-    maze::Node node(0x02);
-    std::cout << node << std::endl;
-    return 0;
-
 #pragma region Parse command line arguments
 
     int c;
