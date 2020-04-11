@@ -34,8 +34,15 @@ private:
     Node *field = NULL;
 
 public:
+    /**
+     * @brief Construct a new Maze object
+     * 
+     * @param    _w                  width
+     * @param    _h                  height
+     */
     Maze(uint _w, uint _h);
 
+    
     void load(uint8_t *bin);
 
     uint8_t *unload();
@@ -46,7 +53,7 @@ public:
 /**
  * @brief Print help to stdout and exit
  * 
- * @param progname Name of the program
- * @param exit_code exit code, if not 0 print help to stderr
+ * @param    progname            Name of the program
+ * @param    exit_code           exit code, if not 0 print help to stderr
  */
 void print_help(char *progname, uint8_t exit_code);

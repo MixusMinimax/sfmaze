@@ -87,6 +87,9 @@ Maze::Maze(uint _w, uint _h)
 
 void Maze::load(uint8_t *bin)
 {
+    w = bin[0];
+    h = bin[1];
+    bin += 2;
     uint l = w * h;
     field = (Node *)malloc(l * sizeof(Node));
     for (uint i = 0; i < l - 1; i += 2)
@@ -102,7 +105,10 @@ void Maze::load(uint8_t *bin)
 uint8_t *Maze::unload()
 {
     uint l = w * h;
-    uint8_t *bin = (uint8_t *)malloc(((l + 1) / 2) * sizeof(uint8_t));
+    uint8_t *bin = (uint8_t *)malloc(((l + 1) / 2 + 2) * sizeof(uint8_t));
+    bin[0] = w;
+    bin[1] = h;
+    bin += 2;
     uint8_t byte;
     bool half = false;
     uint index = 0;
@@ -128,7 +134,7 @@ uint8_t *Maze::unload()
     }
     free(field);
     field = NULL;
-    return bin;
+    return bin - 2;
 }
 
 #pragma endregion // Maze end
