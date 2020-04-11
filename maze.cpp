@@ -320,6 +320,7 @@ int main(int argc, char **argv)
 
     maze::Maze m(width, height);
 
+#pragma region Maze initialization
     // Read from file
     if (input_path.length())
     {
@@ -353,6 +354,7 @@ int main(int argc, char **argv)
         // Initialize empty field
         m.load(NULL);
     }
+#pragma endregion
 
     // TODO: If no window, just generate the maze and exit
     if (!bDisplay)
