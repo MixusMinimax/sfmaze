@@ -1,6 +1,8 @@
 #include <iostream>
 #include <unistd.h>
 #include <string>
+#include <unordered_set>
+#include <boost/functional/hash.hpp>
 #include <SFML/Graphics.hpp>
 
 #pragma region namespace maze
@@ -73,6 +75,25 @@ public:
      * @brief Prints the maze into the console
      */
     void print();
+};
+
+class MazeGenerator
+{
+private:
+    typedef std::pair<int, int> point;
+
+    Maze *maze;
+
+    std::vector<std::pair<point, point>> stack;
+    std::unordered_set<point, boost::hash<point>> visited;
+    point previous = {-1, -1};
+
+public:
+    MazeGenerator(Maze *_maze, point start);
+
+    bool has_next();
+
+    void next();
 };
 } // namespace maze
 #pragma endregion

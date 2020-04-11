@@ -17,6 +17,7 @@
 #include <filesystem>
 #include <iosfwd>
 #include <tuple>
+#include <unordered_set>
 #include <SFML/Graphics.hpp>
 
 #include "maze.hpp"
@@ -44,22 +45,22 @@ Node::Node(uint8_t bin)
     _bin = bin;
 }
 
-#define temp(name, index)                        \
-    bool Node::name(uint8_t val = 2)             \
-    {                                            \
-        if (val == 2)                            \
+#define temp(name, index)                            \
+    bool Node::name(uint8_t val = 2)                 \
+    {                                                \
+        if (val == 2)                                \
             return ((_bin >> 3 - (index)) & 1) == 1; \
-        if (val == 0)                            \
-        {                                        \
-            _bin &= ~(1 << (index));             \
-            return false;                        \
-        }                                        \
-        if (val == 1)                            \
-        {                                        \
-            _bin |= (1 << (index));              \
-            return true;                         \
-        }                                        \
-        return false;                            \
+        if (val == 0)                                \
+        {                                            \
+            _bin &= ~(1 << (index));                 \
+            return false;                            \
+        }                                            \
+        if (val == 1)                                \
+        {                                            \
+            _bin |= (1 << (index));                  \
+            return true;                             \
+        }                                            \
+        return false;                                \
     }
 
 temp(north, 0);
@@ -150,8 +151,6 @@ void Maze::load(uint8_t *bin)
     }
     if (l % 2 == 1)
         field[l - 1] = Node(bin[l / 2] >> 4);
-
-    std::cout << field[0] << std::endl;
 }
 
 uint8_t *Maze::unload()
@@ -214,6 +213,34 @@ void Maze::print()
 }
 
 #pragma endregion // Maze end
+
+/***************************************
+// Maze Generator                     //
+***************************************/
+#pragma region Maze Generator
+
+MazeGenerator::MazeGenerator(Maze *_maze, point start)
+{
+    maze = _maze;
+    stack.push_back({start, {-1, -1}});
+    visited.insert(start);
+}
+
+bool MazeGenerator::has_next()
+{
+    return !stack.empty();
+}
+
+void MazeGenerator::next()
+{
+    uint w = maze->w;
+    uint h = maze->h;
+
+    std::pair<point, point> top = stack.back();
+    stack.pop_back();
+}
+
+#pragma endregion // Maze Generator end
 
 } /* namespace maze */
 #pragma endregion
@@ -420,6 +447,10 @@ int main(int argc, char **argv)
 
     sf::Color wall_color(50, 50, 50);
 
+    maze::MazeGenerator *generator = NULL;
+    if (bGenerate)
+        generator = new maze::MazeGenerator(&m, {0, 0});
+
     while (window.isOpen())
     {
         sf::Event event;
@@ -478,6 +509,10 @@ int main(int argc, char **argv)
 
         window.display();
 
+        // Next generator step
+        if (bGenerate && generator->has_next())
+            generator->next();
+
         // Wait remaining time to keep fps constant
         {
             clock_gettime(CLOCK_MONOTONIC, &curr_time);
@@ -490,8 +525,14 @@ int main(int argc, char **argv)
         }
     }
 
+    if (bGenerate)
+        while (generator->has_next())
+            generator->next();
+
     //TODO: save maze to file if path is specified
     m.unload();
+
+    delete generator;
 
 // SFML Window end
 #pragma endregion
