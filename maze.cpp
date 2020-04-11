@@ -79,7 +79,7 @@ Node::operator std::string()
 ***************************************/
 #pragma region Maze
 
-Maze::Maze(uint _w, uint _h)
+Maze::Maze(uint8_t _w, uint8_t _h)
 {
     w = _w;
     h = _h;

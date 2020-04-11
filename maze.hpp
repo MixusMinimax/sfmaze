@@ -30,7 +30,7 @@ public:
 class Maze
 {
 private:
-    uint w, h;
+    uint8_t w, h;
     Node *field = NULL;
 
 public:
@@ -40,9 +40,8 @@ public:
      * @param    _w                  width
      * @param    _h                  height
      */
-    Maze(uint _w, uint _h);
+    Maze(uint8_t _w, uint8_t _h);
 
-    
     void load(uint8_t *bin);
 
     uint8_t *unload();
