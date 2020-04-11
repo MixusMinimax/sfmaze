@@ -21,8 +21,8 @@
 
 #include "maze.hpp"
 
-#define MAX_WIDTH 1000
-#define MAX_HEIGHT 700
+#define MAX_WIDTH 1500
+#define MAX_HEIGHT 900
 
 static const std::string title = "SFMaze";
 static int verbose_flag;
@@ -48,7 +48,7 @@ Node::Node(uint8_t bin)
     bool Node::name(uint8_t val = 2)             \
     {                                            \
         if (val == 2)                            \
-            return ((_bin >> (index)) & 1) == 1; \
+            return ((_bin >> 3 - (index)) & 1) == 1; \
         if (val == 0)                            \
         {                                        \
             _bin &= ~(1 << (index));             \
@@ -150,6 +150,8 @@ void Maze::load(uint8_t *bin)
     }
     if (l % 2 == 1)
         field[l - 1] = Node(bin[l / 2] >> 4);
+
+    std::cout << field[0] << std::endl;
 }
 
 uint8_t *Maze::unload()
@@ -231,6 +233,14 @@ void print_help(char *progname, uint8_t exit_code = 0)
         << "  -h, --help                 Print this message and exit." << std::endl;
 
     exit(exit_code);
+}
+
+void draw_rect(sf::RenderWindow &window, uint x, uint y, uint w, uint h, sf::Color color)
+{
+    sf::RectangleShape rect = sf::RectangleShape({(float)w, (float)h});
+    rect.setFillColor(color);
+    rect.setPosition(x, y);
+    window.draw(rect);
 }
 
 /***************************************
@@ -386,6 +396,10 @@ int main(int argc, char **argv)
         cellSize = std::max(1, std::min(csx, csy));
     }
 
+    uint wall_thickness = std::max(1u, cellSize / 16u);
+    uint wall_length = cellSize - 2 * wall_thickness;
+    uint wall_offset = cellSize - wall_thickness;
+
     uint wWidth = width * cellSize;
     uint wHeight = height * cellSize;
 
@@ -403,6 +417,8 @@ int main(int argc, char **argv)
     ulong frameTime = 0;
     timespec curr_time;
     ulong curr_time_ms;
+
+    sf::Color wall_color(50, 50, 50);
 
     while (window.isOpen())
     {
@@ -440,10 +456,22 @@ int main(int argc, char **argv)
                     uint ry = y * cellSize;
                     maze::Node *node = &m.field[y * width + x];
 
-                    sf::RectangleShape rect = sf::RectangleShape({(float)cellSize, (float)cellSize});
-                    rect.setFillColor((node->bin()) ? sf::Color{230, 230, 230} : sf::Color{100, 20, 100});
-                    rect.setPosition(rx, ry);
-                    window.draw(rect);
+                    draw_rect(window, rx, ry, cellSize, cellSize,
+                              ((node->bin()) ? sf::Color{230, 230, 230} : sf::Color{100, 20, 100}));
+
+                    draw_rect(window, rx, ry, wall_thickness, wall_thickness, wall_color);
+                    draw_rect(window, rx, ry + wall_offset, wall_thickness, wall_thickness, wall_color);
+                    draw_rect(window, rx + wall_offset, ry + wall_offset, wall_thickness, wall_thickness, wall_color);
+                    draw_rect(window, rx + wall_offset, ry, wall_thickness, wall_thickness, wall_color);
+
+                    if (!node->north())
+                        draw_rect(window, rx + wall_thickness, ry, wall_length, wall_thickness, wall_color);
+                    if (!node->east())
+                        draw_rect(window, rx + wall_offset, ry + wall_thickness, wall_thickness, wall_length, wall_color);
+                    if (!node->south())
+                        draw_rect(window, rx + wall_thickness, ry + wall_offset, wall_length, wall_thickness, wall_color);
+                    if (!node->west())
+                        draw_rect(window, rx, ry + wall_thickness, wall_thickness, wall_length, wall_color);
                 }
             }
         }

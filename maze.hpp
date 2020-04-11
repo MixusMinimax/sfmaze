@@ -1,6 +1,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <string>
+#include <SFML/Graphics.hpp>
 
 #pragma region namespace maze
 namespace maze
@@ -83,3 +84,5 @@ public:
  * @param    exit_code           exit code, if not 0 print help to stderr
  */
 void print_help(char *progname, uint8_t exit_code);
+
+void draw_rect(sf::RenderWindow &window, uint x, uint y, uint w, uint h, sf::Color color);
