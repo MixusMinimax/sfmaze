@@ -128,7 +128,7 @@ void print_help(char *progname, uint8_t exit_code);
  * @param    h                   -""-
  * @param    color               sf::Color of the Rectangle
  */
-void draw_rect(sf::RenderWindow &window, uint x, uint y, uint w, uint h, sf::Color color);
+void draw_rect(sf::RenderWindow *window, int x, int y, int w, int h, sf::Color color);
 
 /**
  * @brief Saves byte Array to file

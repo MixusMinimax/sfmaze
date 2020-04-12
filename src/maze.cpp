@@ -22,6 +22,8 @@
 
 #include "maze.hpp"
 
+#define DEBUG(x) //std::cout << x << std::endl;
+
 #define MAX_WIDTH 1500
 #define MAX_HEIGHT 900
 
@@ -46,22 +48,22 @@ Node::Node(uint8_t bin)
     _bin = bin;
 }
 
-#define temp(name, index)                            \
-    bool Node::name(uint8_t val = 2)                 \
-    {                                                \
-        if (val == 2)                                \
-            return ((_bin >> 3 - (index)) & 1) == 1; \
-        if (val == 0)                                \
-        {                                            \
-            _bin &= ~(1 << (3 - (index)));           \
-            return false;                            \
-        }                                            \
-        if (val == 1)                                \
-        {                                            \
-            _bin |= (1 << (3 - (index)));            \
-            return true;                             \
-        }                                            \
-        return false;                                \
+#define temp(name, index)                              \
+    bool Node::name(uint8_t val = 2)                   \
+    {                                                  \
+        if (val == 2)                                  \
+            return ((_bin >> (3 - (index))) & 1) == 1; \
+        if (val == 0)                                  \
+        {                                              \
+            _bin &= ~(1 << (3 - (index)));             \
+            return false;                              \
+        }                                              \
+        if (val == 1)                                  \
+        {                                              \
+            _bin |= (1 << (3 - (index)));              \
+            return true;                               \
+        }                                              \
+        return false;                                  \
     }
 
 temp(north, 0);
@@ -129,9 +131,7 @@ void Maze::load(uint8_t *bin)
         changed = (bool *)malloc(w * h * sizeof(bool));
         memset(changed, true, w * h);
         for (uint i = 0; i < w * h; ++i)
-        {
             field[i] = Node(0);
-        }
         return;
     }
 
@@ -320,12 +320,12 @@ void print_help(char *progname, uint8_t exit_code = 0)
     exit(exit_code);
 }
 
-void draw_rect(sf::RenderWindow &window, uint x, uint y, uint w, uint h, sf::Color color)
+void draw_rect(sf::RenderWindow *window, int x, int y, int w, int h, sf::Color color)
 {
     sf::RectangleShape rect = sf::RectangleShape({(float)w, (float)h});
     rect.setFillColor(color);
     rect.setPosition(x, y);
-    window.draw(rect);
+    window->draw(rect);
 }
 
 void save_to_file(std::string path, uint8_t *bin, size_t length)
@@ -477,6 +477,9 @@ int main(int argc, char **argv)
         // Initialize empty field
         m.load(NULL);
     }
+
+    DEBUG("Made it past Maze init")
+
 #pragma endregion
 
     maze::MazeGenerator *generator = NULL;
@@ -535,8 +538,8 @@ int main(int argc, char **argv)
     int wWidth = std::min((uint)MAX_WIDTH, width * cellSize);
     int wHeight = std::min((uint)MAX_HEIGHT, height * cellSize);
 
-    sf::RenderWindow window(sf::VideoMode(wWidth, wHeight), "Floating");
-    window.setTitle(title);
+    sf::RenderWindow *window = new sf::RenderWindow(sf::VideoMode(wWidth, wHeight), "Floating");
+    window->setTitle(title);
 
     sf::CircleShape shape(100.f);
     shape.setFillColor(sf::Color::Green);
@@ -554,13 +557,17 @@ int main(int argc, char **argv)
 
     int redrawIndex = 0;
 
-    while (window.isOpen())
+    DEBUG("Created Window")
+    DEBUG("CellSize: " << cellSize)
+    DEBUG("Wall Thickness: " << wall_thickness)
+
+    while (window->isOpen())
     {
         sf::Event event;
-        while (window.pollEvent(event))
+        while (window->pollEvent(event))
         {
             if (event.type == sf::Event::Closed)
-                window.close();
+                window->close();
         }
 
         // Calculate fps
@@ -575,9 +582,7 @@ int main(int argc, char **argv)
             last_time_us = curr_time_us;
         }
 
-        window.setTitle(title + " - " + std::to_string((int)(fps * 10) / 10) + "fps");
-
-        //window.clear();
+        window->setTitle(title + " - " + std::to_string((int)(fps * 10) / 10) + "fps");
 
         for (uint i = 0; i < 64; ++i)
         {
@@ -616,7 +621,7 @@ int main(int argc, char **argv)
             }
         }
 
-        window.display();
+        window->display();
 
         // Next generator steps
         for (uint i = 0; i < stepsPerFrame; ++i)
@@ -629,7 +634,7 @@ int main(int argc, char **argv)
             ulong calc_time_us = curr_time.tv_sec * 1000000ul + curr_time.tv_nsec / 1000ul - curr_time_us;
             ulong target_time_us = 1000000ul / fps_target;
             ulong remaining_time_us = 100;
-            if (calc_time_us < target_time_us)
+            if (calc_time_us < target_time_us - 100)
                 remaining_time_us = target_time_us - calc_time_us;
             usleep(remaining_time_us);
         }
@@ -644,6 +649,7 @@ int main(int argc, char **argv)
         save_to_file(output_path, bin, 2 + (width * height + 1) / 2);
     free(bin);
     delete generator;
+    delete window;
 
 // SFML Window end
 #pragma endregion
