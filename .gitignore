@@ -5,3 +5,4 @@ CMakeCache.txt
 *.o
 *.out
 Makefile
+sfmaze
