@@ -514,7 +514,7 @@ int main(int argc, char **argv)
         cellSize = std::max(1, std::min(csx, csy));
     }
 
-    uint wall_thickness = std::max(3u, cellSize / 16u);
+    uint wall_thickness = std::max(1u, cellSize / 16u);
     uint wall_length = cellSize - 2 * wall_thickness;
     uint wall_offset = cellSize - wall_thickness;
 
