@@ -31,6 +31,7 @@ static std::string input_path = "";
 static std::string output_path = "";
 static bool bDisplay = false;
 static bool bGenerate = false;
+static uint stepsPerFrame = 1;
 
 #pragma region namespace maze
 namespace maze
@@ -52,12 +53,12 @@ Node::Node(uint8_t bin)
             return ((_bin >> 3 - (index)) & 1) == 1; \
         if (val == 0)                                \
         {                                            \
-            _bin &= ~(1 << (index));                 \
+            _bin &= ~(1 << (3 - (index)));           \
             return false;                            \
         }                                            \
         if (val == 1)                                \
         {                                            \
-            _bin |= (1 << (index));                  \
+            _bin |= (1 << (3 - (index)));            \
             return true;                             \
         }                                            \
         return false;                                \
@@ -223,7 +224,7 @@ MazeGenerator::MazeGenerator(Maze *_maze, point start)
 {
     maze = _maze;
     stack.push_back({start, {-1, -1}});
-    visited.insert(start);
+    std::srand(unsigned(std::time(0)));
 }
 
 bool MazeGenerator::has_next()
@@ -236,8 +237,64 @@ void MazeGenerator::next()
     uint w = maze->w;
     uint h = maze->h;
 
-    std::pair<point, point> top = stack.back();
-    stack.pop_back();
+    std::pair<point, point> top;
+    while (1)
+    {
+        if (stack.empty())
+            return;
+
+        top = stack.back();
+        stack.pop_back();
+        if (visited.find(top.first) == visited.end())
+        {
+            visited.insert(top.first);
+            break;
+        }
+    }
+
+    if (top.second != point{-1, -1})
+    {
+        // Update field
+        if (top.first.first > top.second.first) // new is to the east
+        {
+            maze->field[top.second.second * w + top.second.first].east(1);
+            maze->field[top.first.second * w + top.first.first].west(1);
+        }
+        else if (top.first.first < top.second.first) // new is to the west
+        {
+            maze->field[top.second.second * w + top.second.first].west(1);
+            maze->field[top.first.second * w + top.first.first].east(1);
+        }
+        else if (top.first.second < top.second.second) // new is to the north
+        {
+            maze->field[top.second.second * w + top.second.first].north(1);
+            maze->field[top.first.second * w + top.first.first].south(1);
+        }
+        else if (top.first.second > top.second.second) // new is to the south
+        {
+            maze->field[top.second.second * w + top.second.first].south(1);
+            maze->field[top.first.second * w + top.first.first].north(1);
+        }
+
+        maze->changed[top.first.second * w + top.first.first] = true;
+        maze->changed[top.second.second * w + top.second.first] = true;
+    }
+
+    std::vector<point> neighbors = {
+        {top.first.first - 1, top.first.second},
+        {top.first.first + 1, top.first.second},
+        {top.first.first, top.first.second - 1},
+        {top.first.first, top.first.second + 1},
+    };
+
+    std::random_shuffle(neighbors.begin(), neighbors.end());
+
+    for (auto n : neighbors)
+    {
+        if (n.first >= 0 && n.first < w && n.second >= 0 && n.second < h)
+            if (visited.find(n) == visited.end())
+                stack.push_back({n, top.first});
+    }
 }
 
 #pragma endregion // Maze Generator end
@@ -255,6 +312,7 @@ void print_help(char *progname, uint8_t exit_code = 0)
         << "  -o PATH, --output=PATH     Write maze to PATH." << std::endl
         << "  -x N, --width=N            Set maze width. Get's overriden if maze is generated from file." << std::endl
         << "  -y N, --height=N           Set maze height. Get's overriden if maze is generated from file." << std::endl
+        << "  -s N, --steps=N            Calculation steps per frame of drawing, ignored if -d is not set." << std::endl
         << "  -d, --display              Render maze to an SFML window." << std::endl
         << "  -g, --generate             Generate a random maze using depth first search." << std::endl
         << "  -h, --help                 Print this message and exit." << std::endl;
@@ -295,13 +353,14 @@ int main(int argc, char **argv)
                 {"output", required_argument, 0, 'o'},
                 {"width", required_argument, 0, 'x'},
                 {"height", required_argument, 0, 'y'},
+                {"steps", required_argument, 0, 's'},
                 {"display", no_argument, 0, 'd'},
                 {"generate", no_argument, 0, 'g'},
                 {"help", no_argument, 0, 'h'},
                 {0, 0, 0, 0}};
         /* getopt_long stores the option index here. */
         int option_index = 0;
-        c = getopt_long(argc, argv, "i:o:x:y:dgh", long_options, &option_index);
+        c = getopt_long(argc, argv, "i:o:x:y:s:dgh", long_options, &option_index);
         if (c == -1)
             break;
 
@@ -339,6 +398,11 @@ int main(int argc, char **argv)
         case 'y':
             parsed = atoi(optarg);
             height = std::clamp(parsed, 1, 1024);
+            break;
+
+        case 's':
+            parsed = atoi(optarg);
+            stepsPerFrame = (uint)std::clamp(parsed, 1, 1024);
             break;
 
         case 'd':
@@ -393,8 +457,6 @@ int main(int argc, char **argv)
         if (verbose_flag)
         {
             std::cout << "size from file: " << width << 'x' << height << std::endl;
-            if (!bDisplay)
-                m.print();
         }
     }
     else
@@ -404,9 +466,38 @@ int main(int argc, char **argv)
     }
 #pragma endregion
 
+    maze::MazeGenerator *generator = NULL;
+    if (bGenerate)
+        generator = new maze::MazeGenerator(&m, {0, 0});
+
     // TODO: If no window, just generate the maze and exit
     if (!bDisplay)
     {
+        timespec t;
+        clock_gettime(CLOCK_MONOTONIC, &t);
+        ulong start_us = t.tv_sec * 1000000 + t.tv_nsec / 1000;
+
+        if (bGenerate)
+            while (generator->has_next())
+                generator->next();
+
+        clock_gettime(CLOCK_MONOTONIC, &t);
+        ulong end_us = t.tv_sec * 1000000 + t.tv_nsec / 1000;
+        ulong calc_time_us = end_us - start_us;
+
+        if (verbose_flag)
+        {
+            if (m.w <= 12 && m.h <= 20)
+                m.print();
+            else
+                std::cout << "Too big to draw..." << std::endl;
+
+            std::cout << "Done!" << std::endl
+                      << "Compute time: " << (calc_time_us / 1000.f) << " ms" << std::endl;
+        }
+
+        // TODO: save to file
+
         m.unload();
         return EXIT_SUCCESS;
     }
@@ -416,19 +507,19 @@ int main(int argc, char **argv)
 ***************************************/
 #pragma region SFML Window
 
-    uint cellSize = 1;
+    uint cellSize = 3;
     {
         int csx = MAX_WIDTH / width;
         int csy = MAX_HEIGHT / height;
         cellSize = std::max(1, std::min(csx, csy));
     }
 
-    uint wall_thickness = std::max(1u, cellSize / 16u);
+    uint wall_thickness = std::max(3u, cellSize / 16u);
     uint wall_length = cellSize - 2 * wall_thickness;
     uint wall_offset = cellSize - wall_thickness;
 
-    uint wWidth = width * cellSize;
-    uint wHeight = height * cellSize;
+    uint wWidth = std::min((uint)MAX_WIDTH, width * cellSize);
+    uint wHeight = std::min((uint)MAX_HEIGHT, height * cellSize);
 
     sf::RenderWindow window(sf::VideoMode(wWidth, wHeight), "Floating");
     window.setTitle(title);
@@ -440,16 +531,12 @@ int main(int argc, char **argv)
     float fps = 0;
     float fps_weight = std::min(1.f, 10.f / fps_target);
 
-    ulong last_time_ms = 0;
+    ulong last_time_us = 0;
     ulong frameTime = 0;
     timespec curr_time;
-    ulong curr_time_ms;
+    ulong curr_time_us;
 
     sf::Color wall_color(50, 50, 50);
-
-    maze::MazeGenerator *generator = NULL;
-    if (bGenerate)
-        generator = new maze::MazeGenerator(&m, {0, 0});
 
     while (window.isOpen())
     {
@@ -463,13 +550,13 @@ int main(int argc, char **argv)
         // Calculate fps
         {
             clock_gettime(CLOCK_MONOTONIC, &curr_time);
-            curr_time_ms = curr_time.tv_sec * 1000000ul + curr_time.tv_nsec / 1000ul;
+            curr_time_us = curr_time.tv_sec * 1000000ul + curr_time.tv_nsec / 1000ul;
 
-            frameTime = curr_time_ms - last_time_ms;
+            frameTime = curr_time_us - last_time_us;
             float fps_new = 1e6f / frameTime;
             fps = fps * (1 - fps_weight) + fps_new * fps_weight;
 
-            last_time_ms = curr_time_ms;
+            last_time_us = curr_time_us;
         }
 
         window.setTitle(title + " - " + std::to_string((int)(fps * 10) / 10) + "fps");
@@ -509,19 +596,20 @@ int main(int argc, char **argv)
 
         window.display();
 
-        // Next generator step
-        if (bGenerate && generator->has_next())
-            generator->next();
+        // Next generator steps
+        for (uint i = 0; i < stepsPerFrame; ++i)
+            if (bGenerate && generator->has_next())
+                generator->next();
 
         // Wait remaining time to keep fps constant
         {
             clock_gettime(CLOCK_MONOTONIC, &curr_time);
-            ulong calc_time_ms = curr_time.tv_sec * 1000000ul + curr_time.tv_nsec / 1000ul - curr_time_ms;
-            ulong target_time_ms = 1000000ul / fps_target;
-            ulong remaining_time_ms = 100;
-            if (calc_time_ms < target_time_ms)
-                remaining_time_ms = target_time_ms - calc_time_ms;
-            usleep(remaining_time_ms);
+            ulong calc_time_us = curr_time.tv_sec * 1000000ul + curr_time.tv_nsec / 1000ul - curr_time_us;
+            ulong target_time_us = 1000000ul / fps_target;
+            ulong remaining_time_us = 100;
+            if (calc_time_us < target_time_us)
+                remaining_time_us = target_time_us - calc_time_us;
+            usleep(remaining_time_us);
         }
     }
 
