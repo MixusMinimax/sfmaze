@@ -82,17 +82,29 @@ class MazeGenerator
 private:
     typedef std::pair<int, int> point;
 
-    Maze *maze;
-
-    std::vector<std::pair<point, point>> stack;
-    std::unordered_set<point, boost::hash<point>> visited;
-    point previous = {-1, -1};
+    Maze *maze;                                            /// Pointer to maze::Maze object that should be generated
+    std::vector<std::pair<point, point>> stack;            /// Contains next points and their parents
+    std::unordered_set<point, boost::hash<point>> visited; /// Contains all visited points
 
 public:
+    /**
+     * @brief Construct a new Maze Generator object
+     * 
+     * @param    _maze               Pointer to maze::Maze object
+     * @param    start               Starting position
+     */
     MazeGenerator(Maze *_maze, point start);
 
+    /**
+     * @brief to be called before next()
+     * 
+     * @return true if there is a next step
+     */
     bool has_next();
 
+    /**
+     * @brief Executes the next step in the algorithm
+     */
     void next();
 };
 } // namespace maze
@@ -106,6 +118,23 @@ public:
  */
 void print_help(char *progname, uint8_t exit_code);
 
+/**
+ * @brief Draws a Rectangle
+ * 
+ * @param    window              sf::RenderWindow to draw into
+ * @param    x                   Position
+ * @param    y                   -""-
+ * @param    w                   Size
+ * @param    h                   -""-
+ * @param    color               sf::Color of the Rectangle
+ */
 void draw_rect(sf::RenderWindow &window, uint x, uint y, uint w, uint h, sf::Color color);
 
+/**
+ * @brief Saves byte Array to file
+ * 
+ * @param    path                Path to the file to write to
+ * @param    bin                 byte array
+ * @param    length              size of bin
+ */
 void save_to_file(std::string path, uint8_t *bin, size_t length);
