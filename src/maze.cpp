@@ -507,19 +507,19 @@ int main(int argc, char **argv)
 ***************************************/
 #pragma region SFML Window
 
-    uint cellSize = 3;
+    int cellSize = 3;
     {
         int csx = MAX_WIDTH / width;
         int csy = MAX_HEIGHT / height;
         cellSize = std::max(1, std::min(csx, csy));
     }
 
-    uint wall_thickness = std::max(1u, cellSize / 16u);
-    uint wall_length = cellSize - 2 * wall_thickness;
-    uint wall_offset = cellSize - wall_thickness;
+    int wall_thickness = std::max(1, cellSize / 16);
+    int wall_length = cellSize - 2 * wall_thickness;
+    int wall_offset = cellSize - wall_thickness;
 
-    uint wWidth = std::min((uint)MAX_WIDTH, width * cellSize);
-    uint wHeight = std::min((uint)MAX_HEIGHT, height * cellSize);
+    int wWidth = std::min((uint)MAX_WIDTH, width * cellSize);
+    int wHeight = std::min((uint)MAX_HEIGHT, height * cellSize);
 
     sf::RenderWindow window(sf::VideoMode(wWidth, wHeight), "Floating");
     window.setTitle(title);
@@ -537,6 +537,8 @@ int main(int argc, char **argv)
     ulong curr_time_us;
 
     sf::Color wall_color(50, 50, 50);
+
+    int redrawIndex = 0;
 
     while (window.isOpen())
     {
@@ -562,6 +564,12 @@ int main(int argc, char **argv)
         window.setTitle(title + " - " + std::to_string((int)(fps * 10) / 10) + "fps");
 
         //window.clear();
+
+        for (uint i = 0; i < 64; ++i)
+        {
+            m.changed[redrawIndex] = true;
+            redrawIndex = (redrawIndex + 1) % (width * height);
+        }
 
         for (uint y = 0; y < height; ++y)
         {
