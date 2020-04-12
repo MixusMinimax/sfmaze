@@ -328,6 +328,19 @@ void draw_rect(sf::RenderWindow &window, uint x, uint y, uint w, uint h, sf::Col
     window.draw(rect);
 }
 
+void save_to_file(std::string path, uint8_t *bin, size_t length)
+{
+    if (verbose_flag)
+        std::cout << "Saving to file " << path << std::endl;
+
+    std::ofstream ofs(path, std::ios::binary | std::ios::trunc);
+
+    ofs.write((char *)bin, length);
+
+    if (verbose_flag)
+        std::cout << "Writing successful" << std::endl;
+}
+
 /***************************************
 // Main                               //
 ***************************************/
@@ -470,7 +483,6 @@ int main(int argc, char **argv)
     if (bGenerate)
         generator = new maze::MazeGenerator(&m, {0, 0});
 
-    // TODO: If no window, just generate the maze and exit
     if (!bDisplay)
     {
         timespec t;
@@ -496,9 +508,11 @@ int main(int argc, char **argv)
                       << "Compute time: " << (calc_time_us / 1000.f) << " ms" << std::endl;
         }
 
-        // TODO: save to file
+        uint8_t *bin = m.unload();
+        if (output_path.length())
+            save_to_file(output_path, bin, 2 + (width * height + 1) / 2);
+        free(bin);
 
-        m.unload();
         return EXIT_SUCCESS;
     }
 
@@ -625,9 +639,10 @@ int main(int argc, char **argv)
         while (generator->has_next())
             generator->next();
 
-    //TODO: save maze to file if path is specified
-    m.unload();
-
+    uint8_t *bin = m.unload();
+    if (output_path.length())
+        save_to_file(output_path, bin, 2 + (width * height + 1) / 2);
+    free(bin);
     delete generator;
 
 // SFML Window end

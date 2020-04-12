@@ -107,3 +107,5 @@ public:
 void print_help(char *progname, uint8_t exit_code);
 
 void draw_rect(sf::RenderWindow &window, uint x, uint y, uint w, uint h, sf::Color color);
+
+void save_to_file(std::string path, uint8_t *bin, size_t length);
