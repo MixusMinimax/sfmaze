@@ -43,8 +43,8 @@ public:
 class Maze
 {
 public:
-    uint8_t w;            /// Width
-    uint8_t h;            /// Height
+    uint w;               /// Width
+    uint h;               /// Height
     Node *field = NULL;   /// Contains all Nodes of the maze
     bool *changed = NULL; /// Stores for each Node, if it has changed, so that only changed Nodes are drawn to the screen
 
@@ -55,7 +55,7 @@ public:
      * @param    _w                  width
      * @param    _h                  height
      */
-    Maze(uint8_t _w, uint8_t _h);
+    Maze(uint _w, uint _h);
 
     /**
      * @brief Allocate space for field and load field from binay array: { w, h, ...}

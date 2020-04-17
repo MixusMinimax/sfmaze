@@ -24,11 +24,12 @@
 
 #define DEBUG(x) //std::cout << x << std::endl;
 
-#define MAX_WIDTH 1500
-#define MAX_HEIGHT 900
+#define MAX_WIDTH 1800
+#define MAX_HEIGHT 950
 
 static const std::string title = "SFMaze";
 static int verbose_flag;
+static int bLegacy = false;
 static std::string input_path = "";
 static std::string output_path = "";
 static bool bDisplay = false;
@@ -103,7 +104,7 @@ std::ostream &operator<<(std::ostream &os, Node &node)
 ***************************************/
 #pragma region Maze
 
-Maze::Maze(uint8_t _w, uint8_t _h)
+Maze::Maze(uint _w, uint _h)
 {
     w = _w;
     h = _h;
@@ -135,13 +136,22 @@ void Maze::load(uint8_t *bin)
         return;
     }
 
-    w = bin[0];
-    h = bin[1];
+    if (bLegacy)
+    {
+        w = bin[0];
+        h = bin[1];
+        bin += 2 * sizeof(uint8_t);
+    }
+    else
+    {
+        w = ((uint *)bin)[0];
+        h = ((uint *)bin)[1];
+        bin += 2 * sizeof(uint);
+    }
 
     changed = (bool *)malloc(w * h * sizeof(bool));
     memset(changed, true, w * h);
 
-    bin += 2;
     uint l = w * h;
     field = (Node *)malloc(l * sizeof(Node));
     for (uint i = 0; i < l - 1; i += 2)
@@ -157,10 +167,20 @@ void Maze::load(uint8_t *bin)
 uint8_t *Maze::unload()
 {
     uint l = w * h;
-    uint8_t *bin = (uint8_t *)malloc(((l + 1) / 2 + 2) * sizeof(uint8_t));
-    bin[0] = w;
-    bin[1] = h;
-    bin += 2;
+    uint8_t *bin = (uint8_t *)malloc(((l + 1) / 2) * sizeof(uint8_t) + 2 * (bLegacy ? sizeof(uint8_t) : sizeof(uint)));
+    if (bLegacy)
+    {
+        bin[0] = w;
+        bin[1] = h;
+        bin += 2 * sizeof(uint8_t);
+    }
+    else
+    {
+        ((uint *)bin)[0] = w;
+        ((uint *)bin)[1] = h;
+        bin += 2 * sizeof(uint);
+    }
+
     uint8_t byte;
     bool half = false;
     uint index = 0;
@@ -188,7 +208,7 @@ uint8_t *Maze::unload()
     free(changed);
     field = NULL;
     changed = NULL;
-    return bin - 2;
+    return bin - 2 * (bLegacy ? sizeof(uint8_t) : sizeof(uint));
 }
 
 void Maze::print()
@@ -362,6 +382,7 @@ int main(int argc, char **argv)
                 /* These options set a flag. */
                 {"verbose", no_argument, &verbose_flag, 1},
                 {"brief", no_argument, &verbose_flag, 0},
+                {"legacy", no_argument, &bLegacy, 1},
                 {"input", required_argument, 0, 'i'},
                 {"output", required_argument, 0, 'o'},
                 {"width", required_argument, 0, 'x'},
@@ -532,7 +553,7 @@ int main(int argc, char **argv)
     }
 
     int wall_thickness = std::max(1, cellSize / 16);
-    int wall_length = cellSize - 2 * wall_thickness;
+    int wall_length = std::max(1, cellSize - 2 * wall_thickness);
     int wall_offset = cellSize - wall_thickness;
 
     int wWidth = std::min((uint)MAX_WIDTH, width * cellSize);
@@ -604,18 +625,24 @@ int main(int argc, char **argv)
                     draw_rect(window, rx, ry, cellSize, cellSize,
                               ((node->bin()) ? sf::Color{230, 230, 230} : sf::Color{100, 20, 100}));
 
-                    draw_rect(window, rx, ry, wall_thickness, wall_thickness, wall_color);
-                    draw_rect(window, rx, ry + wall_offset, wall_thickness, wall_thickness, wall_color);
-                    draw_rect(window, rx + wall_offset, ry + wall_offset, wall_thickness, wall_thickness, wall_color);
-                    draw_rect(window, rx + wall_offset, ry, wall_thickness, wall_thickness, wall_color);
+                    if (cellSize > 1)
+                    {
+                        draw_rect(window, rx, ry, wall_thickness, wall_thickness, wall_color);
+                        if (cellSize > 2)
+                        {
+                            draw_rect(window, rx, ry + wall_offset, wall_thickness, wall_thickness, wall_color);
+                            draw_rect(window, rx + wall_offset, ry, wall_thickness, wall_thickness, wall_color);
+                            draw_rect(window, rx + wall_offset, ry + wall_offset, wall_thickness, wall_thickness, wall_color);
+                        }
+                    }
 
-                    if (!node->north())
+                    if (!node->north() && cellSize > 1)
                         draw_rect(window, rx + wall_thickness, ry, wall_length, wall_thickness, wall_color);
-                    if (!node->east())
+                    if (!node->east() && cellSize > 2)
                         draw_rect(window, rx + wall_offset, ry + wall_thickness, wall_thickness, wall_length, wall_color);
-                    if (!node->south())
+                    if (!node->south() && cellSize > 2)
                         draw_rect(window, rx + wall_thickness, ry + wall_offset, wall_length, wall_thickness, wall_color);
-                    if (!node->west())
+                    if (!node->west() && cellSize > 1)
                         draw_rect(window, rx, ry + wall_thickness, wall_thickness, wall_length, wall_color);
                 }
             }
