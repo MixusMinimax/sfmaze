@@ -336,7 +336,11 @@ void print_help(char *progname, uint8_t exit_code = 0)
         << "  -s N, --steps=N            Calculation steps per frame of drawing, ignored if -d is not set." << std::endl
         << "  -d, --display              Render maze to an SFML window." << std::endl
         << "  -g, --generate             Generate a random maze using depth first search." << std::endl
-        << "  -h, --help                 Print this message and exit." << std::endl;
+        << "  -h, --help                 Print this message and exit." << std::endl
+        << std::endl
+        << "Debugging:" << std::endl
+        << "  --verbose                  Be verbose." << std::endl
+        << "  --legacy                   Use old file format (single byte for width and height)." << std::endl;
 
     exit(exit_code);
 }
@@ -380,9 +384,7 @@ int main(int argc, char **argv)
     {
         static struct option long_options[] =
             {
-                /* These options set a flag. */
                 {"verbose", no_argument, &verbose_flag, 1},
-                {"brief", no_argument, &verbose_flag, 0},
                 {"legacy", no_argument, &bLegacy, 1},
                 {"input", required_argument, 0, 'i'},
                 {"output", required_argument, 0, 'o'},
