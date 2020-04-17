@@ -28,8 +28,8 @@
 #define MAX_HEIGHT 950
 
 static const std::string title = "SFMaze";
-static int verbose_flag;
-static int bLegacy = false;
+static int verbose_flag = 0;
+static int bLegacy = 0;
 static std::string input_path = "";
 static std::string output_path = "";
 static bool bDisplay = false;
@@ -140,13 +140,13 @@ void Maze::load(uint8_t *bin)
     {
         w = bin[0];
         h = bin[1];
-        bin += 2 * sizeof(uint8_t);
+        bin += 2;
     }
     else
     {
         w = ((uint *)bin)[0];
         h = ((uint *)bin)[1];
-        bin += 2 * sizeof(uint);
+        bin += 8;
     }
 
     changed = (bool *)malloc(w * h * sizeof(bool));
@@ -167,7 +167,8 @@ void Maze::load(uint8_t *bin)
 uint8_t *Maze::unload()
 {
     uint l = w * h;
-    uint8_t *bin = (uint8_t *)malloc(((l + 1) / 2) * sizeof(uint8_t) + 2 * (bLegacy ? sizeof(uint8_t) : sizeof(uint)));
+    uint8_t *bin = (uint8_t *)malloc(((l + 1) / 2) * sizeof(uint8_t) + (bLegacy ? 2 : 8));
+
     if (bLegacy)
     {
         bin[0] = w;
@@ -178,7 +179,7 @@ uint8_t *Maze::unload()
     {
         ((uint *)bin)[0] = w;
         ((uint *)bin)[1] = h;
-        bin += 2 * sizeof(uint);
+        bin += 8;
     }
 
     uint8_t byte;
@@ -208,7 +209,7 @@ uint8_t *Maze::unload()
     free(changed);
     field = NULL;
     changed = NULL;
-    return bin - 2 * (bLegacy ? sizeof(uint8_t) : sizeof(uint));
+    return bin - (bLegacy ? 2 : 8);
 }
 
 void Maze::print()
@@ -351,7 +352,7 @@ void draw_rect(sf::RenderWindow *window, int x, int y, int w, int h, sf::Color c
 void save_to_file(std::string path, uint8_t *bin, size_t length)
 {
     if (verbose_flag)
-        std::cout << "Saving to file " << path << std::endl;
+        std::cout << "Saving to file " << path << ", size: " << length << std::endl;
 
     std::ofstream ofs(path, std::ios::binary | std::ios::trunc);
 
@@ -534,7 +535,7 @@ int main(int argc, char **argv)
 
         uint8_t *bin = m.unload();
         if (output_path.length())
-            save_to_file(output_path, bin, 2 + (width * height + 1) / 2);
+            save_to_file(output_path, bin, (bLegacy ? 2 : 8) + (width * height + 1) / 2);
         free(bin);
 
         return EXIT_SUCCESS;
@@ -673,7 +674,7 @@ int main(int argc, char **argv)
 
     uint8_t *bin = m.unload();
     if (output_path.length())
-        save_to_file(output_path, bin, 2 + (width * height + 1) / 2);
+        save_to_file(output_path, bin, (bLegacy ? 2 : 8) + (width * height + 1) / 2);
     free(bin);
     delete generator;
     delete window;
