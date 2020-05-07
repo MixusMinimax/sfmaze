@@ -8,8 +8,3 @@ Generates random mazes using depth first search.
 - [x] Display the maze as it's being generated in an SFML window
 
 Basically the same as my python version: [pymaze](https://github.com/MixusMinimax/pymaze)
-
-```mermaid
-graph LR
-A[hello] --> B((lol))
-```
