@@ -35,9 +35,10 @@ Command to generate a `100x100` maze and display on screen:
   - width and height are stored in little endian and are four bytes each
   - The rest of the file are the nodes, which are four bits each: north, east, south, west (1 for connected, 0 for disconnected)
   - If width and height are odd, the last byte in the file is padded with four zeros, and ignored on read
+- width and height can be a maximum of 1024 for now.
 - For exporting a maze to a file, you do not need to open the sfml window with `-d`, but if you do, you can close it at any time. the maze generation will still finish, if an output path is supplied.
 - If your computer is slow, you might increase the step size. This means, that in between frames more calculation steps are done, as drawing is the most expensive thing.
-
-
-
+- To save performance, the program only paints the squares that have changed since the last frame. Just to be sure, however, it also repaints 64 of all squares on the screen.
+  - You can notice, that if the window size changes, everything breaks, but the new squares are painted correctly. Everything else fixes itself in a cool scanline animation, because only a couple are repainted each frame.
+  - I preferred this behavior over forcing a fixed window size.
 
